@@ -3,6 +3,10 @@ Summary
 
 Catalog
   Use time stamp of file if creation time is not available
+  Eliminate overlap in catalogs
+    mainshock > significant > foreshocks > historical > aftershocks
+    - Remove significant from foreshocks, historical
+    - Remove foreshocks from historical
 
 PlotMap
 
