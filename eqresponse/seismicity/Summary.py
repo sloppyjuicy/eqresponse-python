@@ -40,7 +40,7 @@ class Summary(object):
         self.significant = significant
 
         self.foreshocks.addDistanceAzimuth(mainshock)
-        self.foreshocks.addDistanceAzimuth(mainshock)
+        self.aftershocks.addDistanceAzimuth(mainshock)
         self.historical.addDistanceAzimuth(mainshock)
         self.significant.addDistanceAzimuth(mainshock)
         return
@@ -63,7 +63,7 @@ class Summary(object):
 
         # Aftershocks
         if not self.aftershocks.events is None and self.aftershocks.events.count() > 0:
-            duration = self.aftershocks.events[-1].preferred_origin().time - mainshock.preferred_origin().time
+            duration = self.aftershocks.events[-1].preferred_origin().time - self.mainshock.preferred_origin().time
         else:
             duration = None
         self._printCatalog(self.aftershocks, "Aftershocks", intervals, timing="after_mainshock", duration=duration)
@@ -72,6 +72,7 @@ class Summary(object):
         self._printCatalog(self.historical, "Historical", intervals, timing="before_mainshock")
 
         # Significant
+        intervals = [YEAR_TO_SECS, 5*YEAR_TO_SECS, 10*YEAR_TO_SECS]
         self._printCatalog(self.significant, "Significant", intervals, timing="before_mainshock")
 
         return
@@ -82,28 +83,31 @@ class Summary(object):
             return
 
         key = label.lower()
-        listMinMag = params.get("summary/%s_list_minmag" % key)
-        maxDist = params.get("%s/maxdist_km" % key)
+        listMinMag = self.params.get("summary/%s_list_minmag" % key)
+        minMag = self.params.get("%s/minmag" % key)
+        maxDist = self.params.get("%s/maxdist_km" % key)
         
-        print("\n%(label)s within %(dist)3.1f km of mainshock epicenter (as of %(date)s)" % {
-                'label': label,
-                'dist': maxdist,
-                'date': self._localTimestamp(catalog.events.creation_info.creation_time)})
+        print("\n%(label)s M >= %(minmag)3.1f within %(dist)3.1f km of mainshock epicenter (as of %(date)s)" % {
+            'label': label,
+            'minmag': minMag,
+            'dist': maxDist,
+            'date': self._localTimestamp(catalog.events.creation_info.creation_time)})
 
         if not duration is None:
             print("Current duration of %(label)s sequence: %(duration)3.1f days\n" % {
-                'label': label,
+                'label': label.lower(),
                 'duration': duration/DAY_TO_SECS})
 
-        self._printTally(catalog.events, intervals, timing="after_mainshock")
+        self._printTally(catalog.events, intervals, timing, minmag=math.floor(minMag))
         if duration > DAY_TO_SECS:
             print("")
-            self._printTally(catalog.events, intervals, timing="before_now")
+            self._printTally(catalog.events, intervals, timing="before_now", minmag=math.floor(minMag))
 
-        print("\nMost recent earthquake")
-        self._printEvent(catalog.events[-1])
+        if timing == "after_mainshock":
+            print("\nMost recent earthquake")
+            self._printEvent(catalog.events[-1])
 
-        eventsF = self.events.filter("magnitude >= %3.1f" % listMinMag)
+        eventsF = catalog.events.filter("magnitude >= %3.1f" % listMinMag)
         print("\n%(label)s M >= %(mag)3.1f" % {'label': label, 'mag': listMinMag})
         for event in eventsF:
             self._printEvent(event)
@@ -117,10 +121,10 @@ class Summary(object):
         return
 
 
-    def _printTally(self, events, tintervals, timing):
+    def _printTally(self, events, tintervals, timing, minmag=1.0):
         maxmag = math.floor(self.mainshock.preferred_magnitude().mag)
         origin = self.mainshock.preferred_origin()
-        binsMag = numpy.arange(1.0, maxmag+0.001, 1.0)[::-1]
+        binsMag = numpy.arange(minmag, maxmag+0.001, 1.0)[::-1]
 
         if timing == "before_mainshock":
             binsTime = numpy.zeros(len(tintervals), dtype=object)
@@ -136,7 +140,7 @@ class Summary(object):
                     break
                 else:
                     binsTime[i] = origin.time + t
-            binsTime[-1] = catalog.events[-1].preferred_origin().time
+            binsTime[-1] = events[-1].preferred_origin().time
             op = "<="
             tdescription = "First"
         elif timing == "before_now":
@@ -163,7 +167,9 @@ class Summary(object):
         if timing == "after_mainshock":
             nintervals -= 1
         for tinterval in tintervals[:nintervals]:
-            if tinterval/YEAR_TO_SECS < 0.999:
+            if tinterval/DAY_TO_SECS < 0.999:
+                tlabel = "%s %3.1f hrs" % (tdescription, tinterval/HOUR_TO_SECS)
+            elif tinterval/YEAR_TO_SECS < 0.999:
                 tlabel = "%s %3.1f days" % (tdescription, tinterval/DAY_TO_SECS)
             else:
                 tlabel = "%s %3.1f yrs" % (tdescription, tinterval/YEAR_TO_SECS)

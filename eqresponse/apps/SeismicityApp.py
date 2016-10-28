@@ -49,12 +49,12 @@ class SeismicityApp(object):
             "qfaults_region": "sf",
             "foreshocks": {
                 "maxdist_km": None,
-                "minmag": None,
+                "minmag": 1.0,
                 "days": 7.0,
             },
             "aftershocks": {
                 "maxdist_km": None,
-                "minmag": None,
+                "minmag": 0.0,
             },
             "significant": {
                 "maxdist_km": None,
@@ -68,10 +68,10 @@ class SeismicityApp(object):
             },
             'summary': {
                 "mag_min": 1.0,
-                "foreshocks_detail_minmag": 1.0,
-                "aftershocks_detail_minmag": None,
-                "historical_detail_minmag": None,
-                "significant_detail_minmag": None,
+                "foreshocks_list_minmag": 1.0,
+                "aftershocks_list_minmag": None,
+                "historical_list_minmag": None,
+                "significant_list_minmag": None,
             },
             'plot_map': {
                 "width_pixels": 1200,
@@ -119,21 +119,18 @@ class SeismicityApp(object):
     def _setDynamicDefaults(self):
         mag = self.mainshock.events[0].preferred_magnitude().mag
 
-        self.params.setDefault("foreshocks/maxdist_km", self.params.maxRounded(5.0, (0.5*mag-2)*5.0, 5.0))
-        self.params.setDefault("foreshocks/minmag", self.params.maxRounded(5.0, (0.5*mag-2)*5.0, 5.0))
-
-        self.params.setDefault("aftershocks/maxdist_km", self.params.maxRounded(5.0, (0.5*mag-2)*5.0, 5.0))
-        self.params.setDefault("aftershocks/minmag", self.params.maxRounded(5.0, (0.5*mag-2)*5.0, 5.0))
+        self.params.setDefault("foreshocks/maxdist_km", self.params.maxRounded(5.0, (0.5+mag-2)*5.0, 5.0))
+        self.params.setDefault("aftershocks/maxdist_km", self.params.maxRounded(5.0, (0.5+mag-2)*5.0, 5.0))
 
         self.params.setDefault("historical/maxdist_km", self.params.maxRounded(10.0, (0.5+mag-2)*10.0, 10.0))
-        self.params.setDefault("historical/minmag", self.params.maxRounded(5.0, (0.5*mag-2)*5.0, 5.0))
+        self.params.setDefault("historical/minmag", self.params.maxRounded(2.0, mag-2, 0.5))
 
-        self.params.setDefault("significant/maxdist_km", self.params.maxRounded(5.0, (0.5*mag-2)*5.0, 5.0))
-        self.params.setDefault("significant/minmag", self.params.maxRounded(5.0, (0.5*mag-2)*5.0, 5.0))
+        self.params.setDefault("significant/maxdist_km", self.params.maxRounded(50.0, 2.0*(mag-5)*50.0, 50.0))
+        self.params.setDefault("significant/minmag", self.params.maxRounded(4.0, mag-1, 0.5))
         
-        self.params.setDefault("summary/aftershocks_detail_minmag", self.params.maxRounded(1.0, mag-1.5, 0.5))
-        self.params.setDefault("summary/historical_detail_minmag", self.params.maxRounded(3.0, mag-1.0, 0.5))
-        self.params.setDefault("summary/significant_detail_minmag", self.params.maxRounded(3.0, mag-1.0, 0.5))
+        self.params.setDefault("summary/aftershocks_list_minmag", self.params.maxRounded(1.0, mag-1.5, 0.5))
+        self.params.setDefault("summary/historical_list_minmag", self.params.maxRounded(3.0, mag-1.0, 0.5))
+        self.params.setDefault("summary/significant_list_minmag", self.params.maxRounded(3.0, mag-1.0, 0.5))
 
         self.params.setDefault("plot_map/height_km", self.params.maxRounded(50.0, 3*self.params.get("historical/maxdist_km"), 50.0))
         self.params.setDefault("plot_map/zoom_level", int(12-math.floor(self.params.get("plot_map/height_km")/75.0)))
@@ -210,7 +207,7 @@ class SeismicityApp(object):
 
         self.significant.fetch(
             starttime=starttime,
-            endtime=origin.time,
+            endtime=origin.time-1,
             longitude=origin.longitude,
             latitude=origin.latitude,
             maxdist=maxdist,
@@ -236,7 +233,7 @@ class SeismicityApp(object):
 
         self.foreshocks.fetch(
             starttime=starttime,
-            endtime=origin.time,
+            endtime=origin.time-1,
             longitude=origin.longitude,
             latitude=origin.latitude,
             maxdist=maxdist,
@@ -262,7 +259,7 @@ class SeismicityApp(object):
 
         self.historical.fetch(
             starttime=starttime,
-            endtime=origin.time,
+            endtime=origin.time-1,
             longitude=origin.longitude,
             latitude=origin.latitude,
             maxdist=maxdist,

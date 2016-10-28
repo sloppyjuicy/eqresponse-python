@@ -35,7 +35,7 @@ class Catalog(object):
         return
 
 
-    def fetch(self, starttime, endtime, longitude, latitude, maxdist, minmag, catalog, filename):
+    def fetch(self, starttime, endtime, longitude, latitude, maxdist, minmag, catalog):
         datacenter = catalog[0]
         if datacenter == "USGS":
             services = {'station': None,
@@ -84,7 +84,7 @@ class Catalog(object):
         utmZone = int(math.floor((origin.longitude+180)/6)+1)
         proj = pyproj.Proj(proj="utm", zone=utmZone, ellps='WGS84')
         x0,y0 = proj(origin.longitude, origin.latitude)
-        
+
         for event in self.events:
             origin = event.preferred_origin()
             xE,yE = proj(origin.longitude, origin.latitude)
