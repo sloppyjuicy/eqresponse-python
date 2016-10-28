@@ -1,3 +1,7 @@
+SeismicityApp
+  - Add use of logger (debug: dynamic defaults)
+  - Add magnitude and distance to progress line.
+
 Summary
   Totals in tally
 
