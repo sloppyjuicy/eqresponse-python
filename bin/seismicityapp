@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+#
+# ======================================================================
+#
+#                           Brad T. Aagaard
+#                        U.S. Geological Survey
+#
+# ======================================================================
+#
+
+import argparse
+import pytz
+
+from obspy.core.utcdatetime import UTCDateTime
+
+from eqresponse.apps.SeismicityApp import SeismicityApp
+from eqresponse.core.Parameters import Parameters
+
+# ======================================================================
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fetch-mainshock", action="store_true", dest="fetch_mainshock")
+    parser.add_argument("--fetch-aftershocks", action="store_true", dest="fetch_aftershocks")
+    parser.add_argument("--fetch-significant", action="store_true", dest="fetch_significant")
+    parser.add_argument("--fetch-historical", action="store_true", dest="fetch_historical")
+    parser.add_argument("--fetch-foreshocks", action="store_true", dest="fetch_foreshocks")
+    parser.add_argument("--print-summary", action="store_true", dest="print_summary")
+    parser.add_argument("--plot-time", action="store_true", dest="plot_time")
+    parser.add_argument("--plot-xsections", action="store_true", dest="plot_xsections")
+    parser.add_argument("--plot-map", action="store_true", dest="plot_map")
+    parser.add_argument("--plot-freqmag", action="store_true", dest="plot_freqmag")
+    parser.add_argument("--all", action="store_true", dest="all")
+    args = parser.parse_args()
+
+    app = SeismicityApp()
+    params = Parameters()
+    params.load("seismicityapp.json")
+    params.initialize(app.defaults)
+    app.params = params
+    
+    app.tz = pytz.timezone(params.get("time_zone"))
+    app.now = UTCDateTime.now()
+    app.initialize()
+
+    if args.fetch_mainshock or args.all:
+        app.fetchMainshock()
+
+    if args.fetch_significant or args.all:
+        app.fetchSignificant()
+
+    if args.fetch_historical or args.all:
+        app.fetchHistorical()
+
+    if args.fetch_foreshocks or args.all:
+        app.fetchForeshocks()
+
+    if args.fetch_aftershocks or args.all:
+        app.fetchAftershocks()
+
+    if args.plot_time or args.all:
+        app.plotTime()
+
+    if args.plot_xsections or args.all:
+        app.plotXSections()
+
+    if args.plot_map or args.all:
+        app.plotMap()
+    
+    if args.plot_freqmag or args.all:
+        app.plotGutenbergRichter()
+
+    if args.print_summary or args.all:
+        app.printSummary()
+    
+
+# End of file
