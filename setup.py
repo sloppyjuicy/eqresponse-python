@@ -25,7 +25,7 @@ setup(name='eqresponse',
       scripts=[
           'bin/eqresponse_identify',
           'bin/eqresponse_seismicity',
-          #'bin/eqresponse_sequences',
+          'bin/eqresponse_sequences',
           ]
       )
 

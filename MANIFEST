@@ -2,10 +2,15 @@ README
 setup.py
 eqresponse/__init__.py
 eqresponse/apps/__init__.py
+eqresponse/apps/IdentifyApp.py
 eqresponse/apps/SeismicityApp.py
+eqresponse/apps/SequencesApp.py
 eqresponse/seismicity/__init__.py
 eqresponse/seismicity/Catalog.py
+eqresponse/seismicity/Summary.py
+eqresponse/seismicity/SummarySequences.py
 eqresponse/core/__init__.py
 eqresponse/core/Parameters.py
 bin/eqresponse_identify
 bin/eqresponse_seismicity
+bin/eqresponse_sequences
