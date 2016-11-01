@@ -26,7 +26,10 @@ KM_TO_DEG = 1.0/111.0 # roughly 111 km per latitude degree
 DAY_TO_SECS = 24*3600.0
 YEAR_TO_SECS = 365.25*DAY_TO_SECS
 
-# SummarySequences
+# :TODO: Remove sequences events from background.
+
+# :TODO: Consider optimizing retrieval by splitting background retrieval into 
+# time windows between sequences
 
 # ----------------------------------------------------------------------
 class SequencesApp(object):
