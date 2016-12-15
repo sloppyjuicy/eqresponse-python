@@ -86,11 +86,15 @@ class Summary(object):
         listMinMag = self.params.get("summary/%s_list_minmag" % key)
         minMag = self.params.get("%s/minmag" % key)
         maxDist = self.params.get("%s/maxdist_km" % key)
+        timespan = ""
+        if timing == "before_mainshock":
+            timespan = "in the past %4.1f years" % self.params.get("%s/years" % key)
         
-        print("\n%(label)s M >= %(minmag)3.1f within %(dist)3.1f km of mainshock epicenter (as of %(date)s)" % {
+        print("\n%(label)s M >= %(minmag)3.1f within %(dist)3.1f km of mainshock epicenter %(timespan)s (as of %(date)s)" % {
             'label': label,
             'minmag': minMag,
             'dist': maxDist,
+            'timespan': timespan,
             'date': self._localTimestamp(catalog.events.creation_info.creation_time)})
 
         if not duration is None:
@@ -126,14 +130,13 @@ class Summary(object):
         origin = self.mainshock.preferred_origin()
         binsMag = numpy.arange(minmag, maxmag+0.001, 1.0)[::-1]
 
+        binsTime = numpy.zeros(len(tintervals)+1, dtype=object)
         if timing == "before_mainshock":
-            binsTime = numpy.zeros(len(tintervals), dtype=object)
             for i,t in enumerate(tintervals):
                 binsTime[i] = origin.time - t
             op = ">="
             tdescription = "Prior"
         elif timing == "after_mainshock":
-            binsTime = numpy.zeros(len(tintervals)+1, dtype=object)
             for i,t in enumerate(tintervals):
                 if self.now < origin.time + t:
                     binsTime = binsTime[:i+1]
@@ -144,7 +147,6 @@ class Summary(object):
             op = "<="
             tdescription = "First"
         elif timing == "before_now":
-            binsTime = numpy.zeros(len(tintervals), dtype=object)
             for i,t in enumerate(tintervals):
                 if self.now-t < origin.time:
                     binsTime = binsTime[:i]
@@ -157,9 +159,11 @@ class Summary(object):
         count = numpy.zeros((binsMag.shape[0], binsTime.shape[0]))
         for irow,binMag in enumerate(binsMag):
             eventsM = events.filter('magnitude >= %3.1f' % binMag)
-            for icol,binTime in enumerate(binsTime):
+            for icol,binTime in enumerate(binsTime[:-1]):
                 eventsT = eventsM.filter('time %s %s' % (op, binTime))
                 count[irow,icol] = eventsT.count()
+            icol = binsTime.shape[0]-1
+            count[irow,icol] = eventsM.count()
 
         # Heading
         hline = "    "
@@ -174,9 +178,8 @@ class Summary(object):
             else:
                 tlabel = "%s %3.1f yrs" % (tdescription, tinterval/YEAR_TO_SECS)
             hline += "%16s" % tlabel
-        if timing == "after_mainshock":
-            tlabel = "Total"
-            hline += "%16s" % tlabel
+        tlabel = "Total"
+        hline += "%16s" % tlabel
         print(hline)
         for irow,binMag in enumerate(binsMag):
             line = "M>=%1.0f" % binMag
