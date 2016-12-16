@@ -23,7 +23,9 @@ setup(name='eqresponse',
           'eqresponse/core',
           ],
       scripts=[
-          'bin/seismicityapp',
+          'bin/eqresponse_identify',
+          'bin/eqresponse_seismicity',
+          'bin/eqresponse_sequences',
           ]
       )
 

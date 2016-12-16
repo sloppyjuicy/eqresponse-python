@@ -29,7 +29,7 @@ YEAR_TO_SECS = 365.25*DAY_TO_SECS
 class Catalog(object):
 
 
-    def __init__(self, filename):
+    def __init__(self, filename=None):
         self.events = None
         self.filename = filename
         return
@@ -47,6 +47,8 @@ class Catalog(object):
         kwds = {}
         if catalog[1] != "":
             kwds = {"catalog": catalog[1]}
+        if not self.filename is None:
+            kwds['filename'] = self.filename
             
         self.events = client.get_events(
             starttime=starttime, 
@@ -55,7 +57,6 @@ class Catalog(object):
             latitude=latitude, 
             maxradius=maxdist,
             minmagnitude=minmag,
-            filename=self.filename,
             orderby="time-asc",
             **kwds)
         return

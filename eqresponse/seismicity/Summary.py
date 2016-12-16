@@ -11,16 +11,7 @@ import numpy
 import pytz
 import datetime
 import math
-import pyproj
 
-import obspy.core.event
-from obspy.clients.fdsn import Client
-from obspy.core.utcdatetime import UTCDateTime
-
-import obspyutils.momenttensor
-
-
-KM_TO_DEG = 1.0/111.0 # roughly 111 km per latitude degree
 HOUR_TO_SECS = 3600.0
 DAY_TO_SECS = 24*HOUR_TO_SECS
 YEAR_TO_SECS = 365.25*DAY_TO_SECS

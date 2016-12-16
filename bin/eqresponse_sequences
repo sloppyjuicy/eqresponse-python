@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+#
+# ======================================================================
+#
+#                           Brad T. Aagaard
+#                        U.S. Geological Survey
+#
+# ======================================================================
+#
+
+import argparse
+import pytz
+
+from obspy.core.utcdatetime import UTCDateTime
+
+from eqresponse.apps.SequencesApp import SequencesApp
+from eqresponse.core.Parameters import Parameters
+
+# ======================================================================
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fetch-background", action="store_true", dest="fetch_background")
+    parser.add_argument("--fetch-sequences", action="store_true", dest="fetch_sequences")
+    parser.add_argument("--print-summary", action="store_true", dest="print_summary")
+    parser.add_argument("--plot-time", action="store_true", dest="plot_time")
+    parser.add_argument("--plot-xsections", action="store_true", dest="plot_xsections")
+    parser.add_argument("--plot-map", action="store_true", dest="plot_map")
+    parser.add_argument("--plot-freqmag", action="store_true", dest="plot_freqmag")
+    parser.add_argument("--all", action="store_true", dest="all")
+    args = parser.parse_args()
+
+    app = SequencesApp()
+    params = Parameters()
+    params.load("sequencesapp.json")
+    params.initialize(app.defaults)
+    app.params = params
+    
+    app.tz = pytz.timezone(params.get("time_zone"))
+    app.now = UTCDateTime.now()
+    app.initialize()
+
+    if args.fetch_background or args.all:
+        app.fetchBackground()
+
+    if args.fetch_sequences or args.all:
+        app.fetchSequences()
+
+    if args.plot_time or args.all:
+        app.plotTime()
+
+    if args.plot_xsections or args.all:
+        app.plotXSections()
+
+    if args.plot_map or args.all:
+        app.plotMap()
+    
+    if args.plot_freqmag or args.all:
+        app.plotGutenbergRichter()
+
+    if args.print_summary or args.all:
+        app.printSummary()
+    
+
+# End of file

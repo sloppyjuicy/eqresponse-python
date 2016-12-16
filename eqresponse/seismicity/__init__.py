@@ -10,6 +10,8 @@
 
 __all__ = [
     "Catalog",
+    "Summary",
+    "SummarySequences",
 ]
 
 

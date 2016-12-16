@@ -9,7 +9,9 @@
 #
 
 __all__ = [
+    "IdentifyApp",
     "SeismicityApp",
+    "SequencesApp",
 ]
 
 

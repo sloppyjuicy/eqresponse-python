@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+#
+# ======================================================================
+#
+#                           Brad T. Aagaard
+#                        U.S. Geological Survey
+#
+# ======================================================================
+#
+
+import argparse
+
+from eqresponse.apps.IdentifyApp import IdentifyApp
+
+# ======================================================================
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--start", action="store", dest="start")
+    parser.add_argument("--end", action="store", dest="end")
+    parser.add_argument("--longitude", action="store", dest="longitude", type=float)
+    parser.add_argument("--latitude", action="store", dest="latitude", type=float)
+    parser.add_argument("--distance", action="store", dest="dist_km", type=float)
+    parser.add_argument("--minmag", action="store", dest="min_mag", type=float)
+    parser.add_argument("--datacenter", action="store", dest="datacenter")
+    args = parser.parse_args()
+
+    app = IdentifyApp()
+    
+    app.run(
+        starttime=args.start,
+        endtime=args.end,
+        longitude=args.longitude,
+        latitude=args.latitude,
+        distkm=args.dist_km,
+        minmag=args.min_mag,
+        datacenter=args.datacenter
+    )
+
+# End of file
