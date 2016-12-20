@@ -12,6 +12,8 @@ from obspy.core.utcdatetime import UTCDateTime
 
 from eqresponse.seismicity.Catalog import Catalog
 
+import re
+
 KM_TO_DEG = 1.0/111.0 # roughly 111 km per latitude degree
 
 # ----------------------------------------------------------------------
@@ -55,7 +57,8 @@ class IdentifyApp(object):
         """
         magnitude = event.preferred_magnitude()
         origin = event.preferred_origin()
-        eventid = event.resource_id.id.split("=")[1]
+        evstr = event.resource_id.id
+        eventid = re.search("eventid=([A-Za-z]*[0-9]+)", evstr).groups()[0]
         print("%(tstamp)s   %(lon)8.3f %(lat)6.3f %(depth)4.1fkm  %(mag)4.2f %(magtype)s  %(evid)s" % {
             'tstamp': origin.time,
             'lon': origin.longitude,
