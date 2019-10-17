@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+
+from obspy.clients.fdsn import Client
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.event import read_events
+from geopy import distance
+import numpy
+import datetime
+
+min_mag = 3.95
+tstart = UTCDateTime("1994-10-15T00:00:00")
+tend = UTCDateTime("2019-10-15T23:59:59")
+radius = 2.0
+longitude = -122.45
+latitude = 37.77
+
+THRESHOLDS = [3.95, 4.45, 4.95]
+
+def fetch():
+    services = {'station': None,
+                    'event': "http://earthquake.usgs.gov/fdsnws/event/1",
+                    'dataselect': None}
+    client = Client("USGS", service_mappings=services, debug=False)
+    catalog = client.get_events(starttime=tstart,
+                                    endtime=tend,
+                                    minmagnitude=min_mag,
+                                    latitude=latitude,
+                                    longitude=longitude,
+                                    maxradius=radius,
+                                    orderby="time-asc")
+    catalog.write("catalog.xml", format="QUAKEML")
+    return catalog
+
+def compute_distance(eventA, eventB):
+    originA = eventA.preferred_origin()
+    originB = eventB.preferred_origin()
+    dist_km = distance.distance((originA.latitude, originA.longitude), (originB.latitude, originB.longitude)).km
+    return dist_km
+
+def print_intervals(eqs, tinterval, tdist, i_sorted, indices):
+    for index in indices:
+        i_interval = i_sorted[index]
+        print("    Interval {}: {}".format(index, str(datetime.timedelta(seconds=tinterval[i_interval]))))
+        i_eq = i_interval
+        print("        {} M{}".format(
+            eqs[i_eq].preferred_origin().time,
+            eqs[i_eq].preferred_magnitude().mag))
+        i_eq = i_interval + 1
+        print("        {} M{}".format(
+            eqs[i_eq].preferred_origin().time,
+            eqs[i_eq].preferred_magnitude().mag))
+        print("        Distance: {:.1f}km".format(tdist[i_interval]))
+        
+
+def process(catalog):
+    for threshold in THRESHOLDS:
+    
+        eqs = catalog.filter("magnitude >= {}".format(threshold))
+        tinterval = numpy.array([eqs[i].preferred_origin().time - eqs[i-1].preferred_origin().time for i in range(1, len(eqs))])
+        i_tsorted = numpy.argsort(tinterval)
+    
+        tdist = numpy.array([compute_distance(eqs[i], eqs[i-1]) for i in range(1, len(eqs))])
+    
+        print("Magnitude threshold: {}; {} earthquakes".format(threshold, len(eqs)))
+        print_intervals(eqs, tinterval, tdist, i_tsorted, [0, 1, 2, -1])
+        tmedian = str(datetime.timedelta(seconds=numpy.median(tinterval)))
+        print("    Median interval: {}".format(tmedian))
+        print("    Median distance: {:.1f}km".format(numpy.median(tdist)))
+
+if __name__ == "__main__":
+    catalog = None
+    catalog = fetch()
+
+    if not catalog:
+        catalog = read_events("catalog.xml")
+    process(catalog)
